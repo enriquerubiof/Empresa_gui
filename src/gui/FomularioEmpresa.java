@@ -27,6 +27,8 @@ import com.mysql.cj.xdevapi.Statement;
 
 import clases.ConexionBD;
 import clases.Empleado;
+import clases.EmpleadosDAO;
+
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -35,10 +37,6 @@ public class FomularioEmpresa extends JFrame {
 
 	private JPanel contentPane;
 	private JTable table;
-	
-	private ConexionBD conexion;
-	private Connection con;
-	private String query;
 
 	private ArrayList <Empleado> listaEmpleados;
 	private int codEmpleado;
@@ -52,11 +50,7 @@ public class FomularioEmpresa extends JFrame {
 	private String nombre;
 	private Empleado empleado;
 	
-	private java.sql.Statement stmt;
-	private ResultSet rs;
-	int eliminado;
 	private DefaultTableModel modelo;
-	private Empleado e;
 	/**
 	 * Launch the application.
 	 */
@@ -83,6 +77,7 @@ public class FomularioEmpresa extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 624, 472);
 		contentPane = new JPanel();
+		contentPane.setBackground(new Color(207, 187, 223));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 
 		setContentPane(contentPane);
@@ -98,6 +93,7 @@ public class FomularioEmpresa extends JFrame {
 		contentPane.add(lblNewLabel, "cell 1 1 2 1,growx");
 		
 		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setVerifyInputWhenFocusTarget(false);
 		scrollPane.setForeground(new Color(0, 64, 128));
 		scrollPane.setBackground(new Color(235, 215, 255));
 		scrollPane.setFont(new Font("Times New Roman", Font.PLAIN, 12));
@@ -106,6 +102,7 @@ public class FomularioEmpresa extends JFrame {
 		contentPane.add(scrollPane, "cell 1 2 2 1,grow");
 		
 		table = new JTable();
+		table.setSelectionForeground(new Color(221, 221, 255));
 		table.setSelectionBackground(new Color(0, 0, 160));
 		table.setBackground(new Color(235, 215, 255));
 		table.setModel(new DefaultTableModel(
@@ -135,101 +132,34 @@ public class FomularioEmpresa extends JFrame {
 		table.setAlignmentY(Component.TOP_ALIGNMENT);
 		scrollPane.setViewportView(table);
 		
-		JButton btnNewButton = new JButton("Mostrar mpleados");
+		JButton btnNewButton = new JButton("Mostrar empleados");
 		btnNewButton.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				try
-				{
-					conectarBD("mostrar");
-				}
-				catch (SQLException e1)
-				{
-					e1.printStackTrace();
-				}
-				rellenarTabla();
+				mostrarDatos();
 			}
 		});
-		contentPane.add(btnNewButton, "cell 1 3,alignx center");
-		
-		JButton btnNewButton_1 = new JButton("Eliminar");
-		btnNewButton_1.addActionListener(new ActionListener()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				try
-				{
-					conectarBD("eliminar");
-				}
-				catch (SQLException e1)
-				{
-					e1.printStackTrace();
-				}
-				rellenarTabla();
-			}
-		});
-		contentPane.add(btnNewButton_1, "cell 2 3,alignx center");
+		contentPane.add(btnNewButton, "cell 1 3 2 1,alignx center");
 	}
 
-	private void conectarBD(String accion) throws SQLException
+	protected void mostrarDatos()
 	{
-		conexion = new ConexionBD();
-		con = conexion.getConexion();
-		stmt = null;
-		rs = null;
-		
-		con.setCatalog("empresa");
-		stmt = con.createStatement();
-
 		// REcoge el modelo de la tabla con sus filas y columnas
-		modelo = (DefaultTableModel) table.getModel();
-				
-		switch (accion)
-		{
-			case "mostrar":
-				guardarEmpleados();
-				break;
-			case "eliminar":
-				eliminar();
-				break;
-		}
-		stmt.close();
-		conexion.desconectar();
-	}
-
-	private void guardarEmpleados() throws SQLException
-	{
-		query = "SELECT * FROM empleados;";
-		rs = stmt.executeQuery(query);
-		while (rs.next())
-		{
-			codEmpleado = rs.getInt("cod_empleado");
-			codDepartamento = rs.getInt("cod_departamento");
-			telefono = rs.getInt("telefono");
-			fechaNacimiento = LocalDate.parse(rs.getString("fecha_nacimiento"));
-			fechaIngreso = LocalDate.parse(rs.getString("fecha_ingreso"));
-			salario = rs.getInt("salario");
-			comision = rs.getDouble("comision");
-			numHijos = rs.getInt("num_Hijos");
-			nombre = rs.getString("nombre");
-			
-			empleado = new Empleado(codEmpleado, codDepartamento, telefono,
-					fechaNacimiento, fechaIngreso, salario, comision, numHijos, nombre);
-			listaEmpleados.add(empleado);
-		}
-		rs.close();
-	}
-
-	private void rellenarTabla()
-	{
+		DefaultTableModel modelo = (DefaultTableModel) table.getModel();
 		// vacía la JTable
 		modelo.setRowCount(0);
 		
+		EmpleadosDAO daoEmp = new EmpleadosDAO();
+
+		ArrayList<Empleado> listaEmpleados = daoEmp.getEmpleados();
+		
 		// recorremos la lista de personas
-		for (Empleado empleado : listaEmpleados) {
+		for (Empleado empleado : listaEmpleados)
+		{
 			// componemos una fila de la tabla
-			Object fila [] = {
+			Object fila [] =
+			{
 				empleado.getCodEmpleado(),
 				empleado.getCodDepartamento(),
 				empleado.getTelefono(),
@@ -243,47 +173,6 @@ public class FomularioEmpresa extends JFrame {
 			
 			// añade la fila al modelo
 			modelo.addRow(fila);
-		}	
-	}
-
-	protected void eliminar() throws SQLException
-	{
-		// tomamos el numero de fila seleccionada
-		int seleccionada = table.getSelectedRow();
-		
-		if (seleccionada==-1)
-		{
-			// no hay ninguna seleccionada
-			JOptionPane.showMessageDialog(contentPane, 
-					"Debe seleccionar una persona a borrar",
-					"No seleccionado", JOptionPane.ERROR_MESSAGE);
-			return;
 		}
-		
-		e = new Empleado();
-		//tomamos el dni de la tabla, de la fila seleccionada y la columna 0 que es el dni
-		e.setCodEmpleado((int) modelo.getValueAt(seleccionada, 0));
-		
-		
-		if (!this.listaEmpleados.contains(e)) {
-			JOptionPane.showMessageDialog(contentPane, 
-					"No existe ninguna persona con ese DNI",
-					"Dni no encontrado", JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-		e = this.listaEmpleados.get(this.listaEmpleados.indexOf(e));
-		this.listaEmpleados.remove(this.listaEmpleados.indexOf(e));
-
-		query = "DELETE FROM empleados"
-				+ " WHERE cod_empleado = " + e.getCodEmpleado() + ";";
-		stmt.executeUpdate(query);
-
-		JOptionPane.showMessageDialog(contentPane, 
-			"Empleado eliminado:\n" + e, "Borrado", 
-			JOptionPane.INFORMATION_MESSAGE);
-
-		// vacía la JTable
-		modelo.setRowCount(0);
-
 	}
 }

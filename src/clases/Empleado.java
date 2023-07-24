@@ -10,7 +10,7 @@ public class Empleado
 	private int telefono;
 	private LocalDate fechaNacimiento;
 	private LocalDate fechaIngreso;
-	private int salario;
+	private double salario;
 	private double comision;
 	private int numHijos;
 	private String nombre;
@@ -20,8 +20,8 @@ public class Empleado
 		this.setCodEmpleado(0);
 		this.setCodDepartamento(0);
 		this.setTelefono(0);
-		this.setFechaNacimiento(LocalDate.now());
-		this.setFechaIngreso(LocalDate.now());
+		this.setFechaNacimiento(null);
+		this.setFechaIngreso(null);
 		this.setSalario(0);
 		this.setComision(0);
 		this.setNumHijos(0);
@@ -29,7 +29,7 @@ public class Empleado
 	}
 
 	public Empleado(int codEmpleado, int codDepartamento, int telefono, LocalDate fechaNacimiento,
-			LocalDate fechaIngreso, int salario, double comision, int numHijos, String nombre)
+			LocalDate fechaIngreso, double salario, double comision, int numHijos, String nombre)
 	{
 		this.setCodEmpleado(codEmpleado);
 		this.setCodDepartamento(codDepartamento);
@@ -45,7 +45,7 @@ public class Empleado
 	public Empleado(int codEmpleado, int codDepartamento, int telefono,
 			int diaNacimiento, int mesNacimiento, int anioNacimiento, 
 			int diaIngreso, int mesIngreso, int anioIngreso,
-			int salario, double comision, int numHijos, String nombre)
+			double salario, double comision, int numHijos, String nombre)
 	{
 		this.setCodEmpleado(codEmpleado);
 		this.setCodDepartamento(codDepartamento);
@@ -88,10 +88,10 @@ public class Empleado
 	public void setFechaIngreso(LocalDate fechaIngreso) {
 		this.fechaIngreso = fechaIngreso;
 	}
-	public int getSalario() {
+	public double getSalario() {
 		return salario;
 	}
-	public void setSalario(int salario) {
+	public void setSalario(double salario) {
 		this.salario = salario;
 	}
 	public double getComision() {
@@ -143,4 +143,6 @@ public class Empleado
 		Empleado other = (Empleado) obj;
 		return codEmpleado == other.codEmpleado;
 	}
+	
+	
 }
